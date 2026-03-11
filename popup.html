@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berat Tab Cluster</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div class="hero-row">
+        <h1>Berat Tab Cluster</h1>
+        <span class="hero-chip">Lightweight</span>
+      </div>
+      <p>
+        Fast URL-list parsing for tab and bookmark management.
+      </p>
+      <div class="scope-tabs" role="tablist" aria-label="Management scopes">
+        <button id="view-tab-tabs" class="scope-tab is-active" type="button" role="tab" aria-selected="true" data-view="tabs">
+          Tabs
+        </button>
+        <button id="view-tab-bookmarks" class="scope-tab" type="button" role="tab" aria-selected="false" data-view="bookmarks">
+          Bookmarks
+        </button>
+      </div>
+    </header>
+
+    <section id="view-tabs" class="view is-active" role="tabpanel" aria-labelledby="view-tab-tabs">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Rules</h2>
+          <button id="save-tab-rules" class="btn btn-accent" type="button">Save Rules</button>
+        </div>
+        <label class="field-label" for="tabs-threshold-slider">
+          Minimum matching tabs before grouping starts
+        </label>
+        <div class="threshold-block">
+          <input id="tabs-threshold-slider" type="range" min="0" max="3" step="1" value="1">
+          <div class="slider-labels" aria-hidden="true">
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5+</span>
+          </div>
+          <div class="threshold-actions">
+            <button data-action="group-tabs" class="btn btn-primary" type="button">Group Tabs by Domain</button>
+            <button data-action="ungroup-tabs" class="btn btn-danger" type="button">Ungroup Tabs</button>
+          </div>
+        </div>
+        <label class="checkbox-row">
+          <input id="collapse-new-groups" type="checkbox">
+          Collapse newly created groups
+        </label>
+        <p id="tabs-rule-summary" class="rule-summary"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Actions</h2>
+        <div class="action-grid">
+          <button data-action="dedupe-tabs" class="btn btn-secondary" type="button">Remove Duplicate Tabs</button>
+          <button data-action="dedupe-root-tabs" class="btn btn-secondary" type="button">Remove Duplicate Root Domains</button>
+          <div class="inline-actions">
+            <button data-action="collapse-all" class="btn btn-ghost" type="button">Collapse All Groups</button>
+            <button data-action="expand-all" class="btn btn-ghost" type="button">Expand All Groups</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Tab Groups</h2>
+          <button id="refresh-groups" class="btn btn-ghost" type="button">Refresh</button>
+        </div>
+        <ul id="group-list" class="group-list"></ul>
+      </section>
+    </section>
+
+    <section id="view-bookmarks" class="view" role="tabpanel" aria-labelledby="view-tab-bookmarks">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Rules</h2>
+          <button id="save-bookmark-rules" class="btn btn-accent" type="button">Save Rules</button>
+        </div>
+        <label class="field-label" for="bookmark-folder-picker">
+          Bookmark folder scope
+        </label>
+        <select id="bookmark-folder-picker"></select>
+        <label class="field-label" for="bookmarks-threshold-slider">
+          Minimum matching bookmarks before grouping starts
+        </label>
+        <div class="threshold-block">
+          <input id="bookmarks-threshold-slider" type="range" min="0" max="3" step="1" value="1">
+          <div class="slider-labels" aria-hidden="true">
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5+</span>
+          </div>
+          <div class="threshold-actions">
+            <button data-action="group-bookmarks" class="btn btn-primary" type="button">Group Bookmarks by Domain</button>
+            <button data-action="ungroup-bookmarks" class="btn btn-danger" type="button">Ungroup Bookmarks</button>
+          </div>
+        </div>
+        <label class="checkbox-row">
+          <input id="open-bookmarks-background" type="checkbox" checked>
+          Open bookmarks in background tabs
+        </label>
+        <p id="bookmarks-rule-summary" class="rule-summary"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Actions</h2>
+        <div class="action-grid">
+          <button data-action="bookmark-tabs" class="btn btn-primary" type="button">Bookmark All Open Tabs</button>
+          <button data-action="open-bookmarks" class="btn btn-primary" type="button">Open All Bookmarks as Tabs</button>
+          <button data-action="dedupe-bookmarks" class="btn btn-secondary" type="button">Remove Duplicate Bookmarks</button>
+          <button data-action="dedupe-root-bookmarks" class="btn btn-secondary" type="button">Remove Duplicate Root Domains</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Bookmark Folders</h2>
+          <button id="refresh-bookmark-folders" class="btn btn-ghost" type="button">Refresh</button>
+        </div>
+        <ul id="bookmark-folder-list" class="group-list"></ul>
+      </section>
+    </section>
+
+    <footer id="status" class="status status-info">Ready.</footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
