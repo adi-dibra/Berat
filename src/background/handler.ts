@@ -1,5 +1,6 @@
 import * as bookmarks from '../actions/bookmarkActions';
 import * as convert from '../actions/convertActions';
+import * as remove from '../actions/removeActions';
 import * as tabs from '../actions/tabActions';
 import type { Request, Response } from '../shared/messages';
 import type { ActionResult } from '../shared/types';
@@ -31,6 +32,12 @@ export async function handleRequest(api: typeof chrome, req: Request): Promise<R
       break;
     case 'folderToGroup':
       result = await convert.folderToTabGroup(api, req.windowId, req.folderId);
+      break;
+    case 'closeTabs':
+      result = await remove.closeTabs(api, req.windowId, req.tabIds, req.label);
+      break;
+    case 'deleteBookmarks':
+      result = await remove.deleteBookmarks(api, req.ids, req.label);
       break;
     default:
       return { ok: false, message: `Unknown request ${(req as { type: string }).type}` };

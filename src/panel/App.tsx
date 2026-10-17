@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { BookmarkStore } from '../chrome/bookmarkStore';
 import { TabStore } from '../chrome/tabStore';
 import type { BelowMinMode } from '../core/grouping';
+import { DEFAULT_RULES, type NormalizeRules } from '../core/normalize';
 import { ALL_FOLDERS, BookmarksView } from './BookmarksView';
 import { Dialog, type DialogOptions } from './Dialog';
+import { DuplicatesView } from './DuplicatesView';
 import { TabsView, type TabsSubView } from './TabsView';
 import { useStoreVersion } from './useStore';
 
@@ -33,7 +35,9 @@ export function App() {
 
   // The bookmark tree is loaded the first time something needs it.
   const [bookmarkStore, setBookmarkStore] = useState<BookmarkStore | null>(null);
-  const bookmarksWanted = mode === 'bookmarks';
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [rules, setRules] = useState<NormalizeRules>(DEFAULT_RULES);
+  const bookmarksWanted = mode === 'bookmarks' || showDuplicates;
   const bmStarted = useRef<BookmarkStore | null>(null);
   useEffect(() => {
     if (!bookmarksWanted || bmStarted.current) return;
@@ -59,7 +63,7 @@ export function App() {
       <header class="toolbar">
         <div class="mode-toggle" role="tablist" aria-label="Mode">
           {(['tabs', 'bookmarks'] as const).map((m) => (
-            <button role="tab" aria-selected={mode === m} class={mode === m ? 'on' : ''} onClick={() => setMode(m)}>
+            <button role="tab" aria-selected={mode === m} class={mode === m ? 'on' : ''} onClick={() => { setMode(m); setShowDuplicates(false); }}>
               {m === 'tabs' ? 'Tabs' : 'Bookmarks'}
             </button>
           ))}
@@ -80,10 +84,27 @@ export function App() {
             />
             Hide small groups
           </label>
+          <button class={'btn' + (showDuplicates ? ' primary' : '')} aria-pressed={showDuplicates} onClick={() => setShowDuplicates(!showDuplicates)}>
+            Duplicates
+          </button>
         </div>
       </header>
 
-      {mode === 'bookmarks' ? (
+      {showDuplicates ? (
+        <DuplicatesView
+          mode={mode}
+          tabStore={tabStore}
+          tabsVersion={tabsVersion}
+          bookmarkStore={bookmarkStore}
+          bookmarksVersion={bookmarksVersion}
+          folderId={folderId}
+          rules={rules}
+          onRulesChange={setRules}
+          onClose={() => setShowDuplicates(false)}
+          notify={notify}
+          confirm={confirm}
+        />
+      ) : mode === 'bookmarks' ? (
         !bookmarkStore ? (
           <div class="empty">Loading bookmarks…</div>
         ) : (

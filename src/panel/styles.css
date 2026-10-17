@@ -102,3 +102,7 @@ button, input, select { font: inherit; color: inherit; }
 .dup-set .keep { color: var(--accent); }
 .dup-set .drop { color: var(--muted); text-decoration: line-through; }
 .settings-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; }
+.name.keep { color: var(--accent); }
+.name.drop { color: var(--muted); text-decoration: line-through; }
+details.summary summary { cursor: pointer; }
+.btn.primary.danger { background: var(--danger); border-color: var(--danger); color: var(--accent-fg); }
