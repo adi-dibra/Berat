@@ -1,27 +1,24 @@
-# Berat Tab Cluster (Lightweight Chrome Extension)
+# Berat Tab Manager
 
-## What It Does
-- Removes duplicate tabs
-- Removes duplicate tabs by root domain (keeps one tab per root domain)
-- Removes duplicate bookmarks
-- Removes duplicate bookmarks by root domain (keeps one bookmark per root domain)
-- Groups tabs by root domain with a user-set minimum threshold
-- Groups bookmarks by root domain with a user-set minimum threshold
-- Sorts groups by size (largest first)
-- Collapses/expands groups (individually or all at once)
-- Bookmarks all open tabs
-- Opens all bookmarks as tabs
-- Opens bookmarks and groups opened tabs by bookmark subfolder path
-- Ungroups tabs
-- Ungroups bookmarks grouped into domain folders
-- Lets you choose a bookmark folder scope for bookmark actions
-- Shows a Bookmark Folders section for the selected bookmark scope
+A Chrome (Manifest V3) side panel extension for managing hundreds to thousands of
+open tabs and bookmarks by grouping them by root domain. Everything runs locally:
+no host permissions, no network calls, no analytics.
 
-## Performance Approach
-This extension reads URL metadata directly from `chrome.tabs.query` and `chrome.bookmarks.getTree`, then computes root-domain clusters from those lists. It does not load tab contents to perform grouping or dedupe.
+## Install from source (load unpacked)
 
-## Load in Chrome
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked**.
-4. Select this folder: `C:\Users\adidi\github\Berat`.
+1. Install Node.js 20 or newer.
+2. In this folder run:
+   ```
+   npm install
+   npm run build
+   ```
+3. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**
+   and pick the `dist` folder.
+4. Click the extension's toolbar button (or press Alt+Shift+T) to open the side panel.
+
+## Development
+
+- `npm run dev` serves a harness at http://localhost:5199/dev.html that runs the
+  real side panel against an in-memory fake of the `chrome.*` API. Seed sizes with
+  `?tabs=5000&bookmarks=20000`.
+- `npm test` runs the unit tests (Vitest).

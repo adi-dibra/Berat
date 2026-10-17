@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tab Manager (dev harness)</title>
+    <style>
+      body { display: flex; }
+      #strip { flex: 1; overflow: auto; height: 100vh; padding: 8px; background: #f8f9fa; color: #333; border-right: 1px solid #ddd; font: 12px system-ui, sans-serif; }
+      #strip h3 { margin: 4px 0 8px; font-size: 13px; }
+      #strip .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 4px; border-left: 4px solid transparent; }
+      #strip .t.active { font-weight: 700; }
+      #panel { width: 380px; flex: none; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="strip"></div>
+    <div id="panel"><div id="app"></div></div>
+    <script type="module" src="./mock/devHarness.ts"></script>
+  </body>
+</html>

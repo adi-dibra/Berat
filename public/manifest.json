@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Berat Tab Manager",
+  "short_name": "Berat",
+  "version": "0.1.0",
+  "description": "Group hundreds or thousands of tabs and bookmarks by domain, right in the side panel. Everything stays on your device.",
+  "minimum_chrome_version": "116",
+  "permissions": ["tabs", "tabGroups", "bookmarks", "sidePanel", "storage"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "side_panel": { "default_path": "panel.html" },
+  "action": {
+    "default_title": "Open Berat Tab Manager",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "commands": {
+    "_execute_action": { "suggested_key": { "default": "Alt+Shift+T" }, "description": "Open the tab manager side panel" }
+  }
+}
