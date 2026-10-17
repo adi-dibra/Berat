@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { BookmarkStore } from '../chrome/bookmarkStore';
 import { TabStore } from '../chrome/tabStore';
 import type { BelowMinMode } from '../core/grouping';
+import { ALL_FOLDERS, BookmarksView } from './BookmarksView';
+import { Dialog, type DialogOptions } from './Dialog';
 import { TabsView, type TabsSubView } from './TabsView';
 import { useStoreVersion } from './useStore';
 
@@ -27,6 +30,23 @@ export function App() {
     return () => s.stop();
   }, []);
   const tabsVersion = useStoreVersion(tabStore);
+
+  // The bookmark tree is loaded the first time something needs it.
+  const [bookmarkStore, setBookmarkStore] = useState<BookmarkStore | null>(null);
+  const bookmarksWanted = mode === 'bookmarks';
+  const bmStarted = useRef<BookmarkStore | null>(null);
+  useEffect(() => {
+    if (!bookmarksWanted || bmStarted.current) return;
+    const s = new BookmarkStore();
+    bmStarted.current = s;
+    s.start().then(() => setBookmarkStore(s));
+  }, [bookmarksWanted]);
+  useEffect(() => () => bmStarted.current?.stop(), []);
+  const bookmarksVersion = useStoreVersion(bookmarkStore);
+  const [folderId, setFolderId] = useState(ALL_FOLDERS);
+
+  const [dialog, setDialog] = useState<(DialogOptions & { resolve: (ok: boolean) => void }) | null>(null);
+  const confirm = (o: DialogOptions) => new Promise<boolean>((resolve) => setDialog({ ...o, resolve }));
 
   const notify = (message: string, ok = true) => {
     setToast({ message, ok });
@@ -64,7 +84,21 @@ export function App() {
       </header>
 
       {mode === 'bookmarks' ? (
-        <div class="empty">Bookmarks mode is coming in a later phase.</div>
+        !bookmarkStore ? (
+          <div class="empty">Loading bookmarks…</div>
+        ) : (
+          <BookmarksView
+            store={bookmarkStore}
+            version={bookmarksVersion}
+            windowId={tabStore?.windowId ?? -1}
+            minSize={minSize}
+            belowMin={belowMin}
+            folderId={folderId}
+            onFolderChange={setFolderId}
+            notify={notify}
+            confirm={confirm}
+          />
+        )
       ) : !tabStore ? (
         <div class="empty">Loading tabs…</div>
       ) : (
@@ -78,6 +112,16 @@ export function App() {
           sortAscending={sortAscending}
           onSortAscendingChange={setSortAscending}
           notify={notify}
+        />
+      )}
+
+      {dialog && (
+        <Dialog
+          {...dialog}
+          onClose={(ok) => {
+            dialog.resolve(ok);
+            setDialog(null);
+          }}
         />
       )}
 

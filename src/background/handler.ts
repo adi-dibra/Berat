@@ -1,3 +1,4 @@
+import * as bookmarks from '../actions/bookmarkActions';
 import * as tabs from '../actions/tabActions';
 import type { Request, Response } from '../shared/messages';
 import type { ActionResult } from '../shared/types';
@@ -20,6 +21,9 @@ export async function handleRequest(api: typeof chrome, req: Request): Promise<R
       break;
     case 'ungroup':
       result = await tabs.ungroup(api, req.windowId, req.groupIds);
+      break;
+    case 'flattenFolder':
+      result = await bookmarks.flattenFolder(api, req.folderId);
       break;
     default:
       return { ok: false, message: `Unknown request ${(req as { type: string }).type}` };

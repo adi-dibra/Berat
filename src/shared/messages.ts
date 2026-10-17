@@ -7,7 +7,8 @@ export type Request =
   | { type: 'groupAll'; windowId: number; minSize: number }
   | { type: 'setCollapsed'; windowId: number; groupIds: number[] | null; collapsed: boolean }
   | { type: 'sortGroups'; windowId: number; ascending: boolean }
-  | { type: 'ungroup'; windowId: number; groupIds: number[] | null };
+  | { type: 'ungroup'; windowId: number; groupIds: number[] | null }
+  | { type: 'flattenFolder'; folderId: string };
 
 export interface Response {
   ok: boolean;
