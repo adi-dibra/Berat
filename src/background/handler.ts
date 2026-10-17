@@ -4,6 +4,14 @@ import * as remove from '../actions/removeActions';
 import * as tabs from '../actions/tabActions';
 import type { Request, Response } from '../shared/messages';
 import type { ActionResult } from '../shared/types';
+import { UndoManager } from './undo';
+
+const managers = new WeakMap<object, UndoManager>();
+function undoFor(api: typeof chrome): UndoManager {
+  let m = managers.get(api);
+  if (!m) managers.set(api, (m = new UndoManager(api)));
+  return m;
+}
 
 /** Runs one panel request. Kept free of globals so tests can pass a fake API. */
 export async function handleRequest(api: typeof chrome, req: Request): Promise<Response> {
@@ -39,8 +47,11 @@ export async function handleRequest(api: typeof chrome, req: Request): Promise<R
     case 'deleteBookmarks':
       result = await remove.deleteBookmarks(api, req.ids, req.label);
       break;
+    case 'undo':
+      return { ok: true, message: await undoFor(api).undo(req.id) };
     default:
       return { ok: false, message: `Unknown request ${(req as { type: string }).type}` };
   }
-  return { ok: true, message: result.message };
+  const undoId = result.undo ? await undoFor(api).push(result.undo) : undefined;
+  return { ok: true, message: result.message, undoId };
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import type { BookmarkItem, BookmarkStore } from '../chrome/bookmarkStore';
 import { OPEN_CONFIRM_THRESHOLD } from '../actions/convertActions';
 import { planFlatten } from '../core/flatten';
-import { groupByDomain, OTHER_KEY, type BelowMinMode } from '../core/grouping';
+import { filterItems, groupByDomain, OTHER_KEY, type BelowMinMode } from '../core/grouping';
 import { send, type Request } from '../shared/messages';
 import type { DialogOptions } from './Dialog';
 import { faviconSrc } from './favicon';
@@ -20,11 +20,12 @@ interface Props {
   store: BookmarkStore;
   version: number;
   windowId: number;
+  query: string;
   minSize: number;
   belowMin: BelowMinMode;
   folderId: string;
   onFolderChange: (id: string) => void;
-  notify: (message: string, ok?: boolean) => void;
+  notify: (message: string, ok?: boolean, undoId?: string) => void;
   confirm: (o: DialogOptions) => Promise<boolean>;
 }
 
@@ -36,7 +37,8 @@ export function BookmarksView(p: Props) {
 
   const folders = useMemo(() => store.folders(), [store, p.version]);
   const folderId = p.folderId && store.nodes.has(p.folderId) ? p.folderId : ALL_FOLDERS;
-  const items = useMemo(() => store.bookmarksUnder(folderId || undefined), [store, p.version, folderId]);
+  const scoped = useMemo(() => store.bookmarksUnder(folderId || undefined), [store, p.version, folderId]);
+  const items = useMemo(() => filterItems(scoped, p.query), [scoped, p.query]);
   const grouped = useMemo(
     () => groupByDomain(items, (b) => b.url, { minSize: p.minSize, belowMin: p.belowMin }),
     [items, p.minSize, p.belowMin],
@@ -64,7 +66,7 @@ export function BookmarksView(p: Props) {
     setBusy(true);
     const res = await send(req);
     setBusy(false);
-    p.notify(res.message, res.ok);
+    p.notify(res.message, res.ok, res.undoId);
   };
 
   const flatten = async () => {
@@ -94,7 +96,7 @@ export function BookmarksView(p: Props) {
 
   const openAsGroup = async () => {
     const title = store.folderTitle(folderId);
-    const count = items.length;
+    const count = scoped.length;
     if (!count) {
       p.notify(`"${title}" has no bookmarks to open.`);
       return;
@@ -133,7 +135,7 @@ export function BookmarksView(p: Props) {
       </div>
       <div class="summary actions" role="toolbar" aria-label="Bookmark folder actions">
         <span aria-live="polite">
-          {grouped.totalCount} bookmarks · {grouped.groups.filter((g) => !g.isOther).length} domains
+          {grouped.totalCount}{p.query ? ` of ${scoped.length}` : ''} bookmarks · {grouped.groups.filter((g) => !g.isOther).length} domains
           {grouped.hiddenCount ? ` · ${grouped.hiddenCount} hidden` : ''}
         </span>
         <span class="spacer" />
@@ -147,13 +149,13 @@ export function BookmarksView(p: Props) {
         </button>
       </div>
       {rows.length === 0 ? (
-        <div class="empty">No bookmarks here.</div>
+        <div class="empty">{p.query ? 'No bookmarks match the filter.' : 'No bookmarks here.'}</div>
       ) : (
         <VirtualList
           rows={rows}
           rowHeight={ROW_HEIGHT}
           rowKey={(r) => r.key}
-          label="Bookmarks grouped by domain"
+          label="Bookmarks grouped by domain. Enter opens, arrows move, left and right collapse a group."
           activeIndex={Math.min(activeIndex, rows.length - 1)}
           onActiveIndexChange={setActiveIndex}
           onKeyDown={(e, row) => {

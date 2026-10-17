@@ -1,5 +1,8 @@
 /** Types shared by the side panel and the service worker. */
 
+/** chrome.storage.session key holding the undo history. */
+export const UNDO_KEY = 'undoStack';
+
 export interface SavedGroup {
   title: string;
   color: string;

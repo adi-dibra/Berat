@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { TabStore } from '../chrome/tabStore';
 import { GROUP_COLOR_CSS, type GroupColor } from '../core/color';
-import { groupByDomain, OTHER_KEY, type BelowMinMode } from '../core/grouping';
+import { filterItems, groupByDomain, OTHER_KEY, type BelowMinMode } from '../core/grouping';
 import { send, type Request } from '../shared/messages';
 import { faviconSrc } from './favicon';
 import { Icon, hostLabel } from './Icon';
@@ -22,13 +22,14 @@ const UNGROUPED = -1;
 interface Props {
   store: TabStore;
   version: number;
+  query: string;
   minSize: number;
   belowMin: BelowMinMode;
   view: TabsSubView;
   onViewChange: (v: TabsSubView) => void;
   sortAscending: boolean;
   onSortAscendingChange: (v: boolean) => void;
-  notify: (message: string, ok?: boolean) => void;
+  notify: (message: string, ok?: boolean, undoId?: string) => void;
 }
 
 export function TabsView(p: Props) {
@@ -37,7 +38,8 @@ export function TabsView(p: Props) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [busy, setBusy] = useState(false);
 
-  const tabs = useMemo(() => store.list(), [store, p.version]);
+  const allTabs = useMemo(() => store.list(), [store, p.version]);
+  const tabs = useMemo(() => filterItems(allTabs, p.query), [allTabs, p.query]);
 
   const grouped = useMemo(
     () => groupByDomain(tabs, (t) => t.url ?? t.pendingUrl, { minSize: p.minSize, belowMin: p.belowMin }),
@@ -96,7 +98,7 @@ export function TabsView(p: Props) {
     setBusy(true);
     const res = await send(req);
     setBusy(false);
-    p.notify(res.message, res.ok);
+    p.notify(res.message, res.ok, res.undoId);
   };
   const windowId = store.windowId;
   const groupCount = nativeGroups.order.length;
@@ -106,6 +108,24 @@ export function TabsView(p: Props) {
     if (row.kind === 'tab') {
       if (row.tab.id !== undefined) chrome.tabs.update(row.tab.id, { active: true });
     } else toggleUi(row.key);
+  };
+
+  /** Single-key shortcuts on the keyboard-active row: g group, c collapse/expand, u ungroup, s save. */
+  const rowShortcut = (key: string, row: Row): boolean => {
+    if (busy) return false;
+    if (row.kind === 'domain' && !row.isOther && key === 'g') {
+      run({ type: 'groupDomain', windowId, domain: row.domain });
+      return true;
+    }
+    if (row.kind === 'ngroup' && row.group) {
+      const g = row.group;
+      if (key === 'c') run({ type: 'setCollapsed', windowId, groupIds: [g.id], collapsed: !g.collapsed });
+      else if (key === 'u') run({ type: 'ungroup', windowId, groupIds: [g.id] });
+      else if (key === 's') run({ type: 'groupToFolder', windowId, groupId: g.id });
+      else return false;
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -118,8 +138,8 @@ export function TabsView(p: Props) {
         <span class="spacer" />
         <span aria-live="polite">
           {p.view === 'domains'
-            ? `${grouped.totalCount} tabs · ${grouped.groups.filter((g) => !g.isOther).length} domains${grouped.hiddenCount ? ` · ${grouped.hiddenCount} hidden` : ''}`
-            : `${tabs.length} tabs · ${groupCount} groups`}
+            ? `${grouped.totalCount}${p.query ? ` of ${allTabs.length}` : ''} tabs · ${grouped.groups.filter((g) => !g.isOther).length} domains${grouped.hiddenCount ? ` · ${grouped.hiddenCount} hidden` : ''}`
+            : `${tabs.length}${p.query ? ` of ${allTabs.length}` : ''} tabs · ${groupCount} groups`}
         </span>
       </div>
       <div class="summary actions" role="toolbar" aria-label="Tab group actions">
@@ -146,17 +166,18 @@ export function TabsView(p: Props) {
         <button class="btn danger" disabled={busy || !groupCount} onClick={() => run({ type: 'ungroup', windowId, groupIds: null })}>Ungroup all</button>
       </div>
       {rows.length === 0 ? (
-        <div class="empty">No tabs.</div>
+        <div class="empty">{p.query ? 'No tabs match the filter.' : 'No tabs.'}</div>
       ) : (
         <VirtualList
           rows={rows}
           rowHeight={ROW_HEIGHT}
           rowKey={(r) => r.key}
-          label={p.view === 'domains' ? 'Tabs grouped by domain' : 'Tabs by Chrome tab group'}
+          label={(p.view === 'domains' ? 'Tabs grouped by domain' : 'Tabs by Chrome tab group') + '. Enter opens, arrows move, left and right collapse, g groups a domain, c collapses, u ungroups, s saves a tab group.'}
           activeIndex={Math.min(activeIndex, rows.length - 1)}
           onActiveIndexChange={setActiveIndex}
           onKeyDown={(e, row) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(row); }
+            else if (row && !e.ctrlKey && !e.metaKey && !e.altKey && rowShortcut(e.key, row)) e.preventDefault();
             else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && row && row.kind !== 'tab') {
               const isCollapsed = uiCollapsed.has(row.key);
               if ((e.key === 'ArrowLeft') !== isCollapsed) { e.preventDefault(); toggleUi(row.key); }

@@ -29,7 +29,7 @@ interface Props {
   rules: NormalizeRules;
   onRulesChange: (r: NormalizeRules) => void;
   onClose: () => void;
-  notify: (message: string, ok?: boolean) => void;
+  notify: (message: string, ok?: boolean, undoId?: string) => void;
   confirm: (o: DialogOptions) => Promise<boolean>;
 }
 
@@ -87,7 +87,7 @@ export function DuplicatesView(p: Props) {
     setBusy(true);
     const res = await send(req);
     setBusy(false);
-    p.notify(res.message, res.ok);
+    p.notify(res.message, res.ok, res.undoId);
   };
 
   const apply = async () => {

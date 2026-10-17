@@ -1,5 +1,6 @@
 import { render } from 'preact';
 import { App } from './App';
+import { loadSettings } from './settings';
 import './styles.css';
 
-render(<App />, document.getElementById('app')!);
+loadSettings().then((settings) => render(<App initial={settings} />, document.getElementById('app')!));

@@ -12,7 +12,8 @@ export type Request =
   | { type: 'groupToFolder'; windowId: number; groupId: number }
   | { type: 'folderToGroup'; windowId: number; folderId: string }
   | { type: 'closeTabs'; windowId: number; tabIds: number[]; label: string }
-  | { type: 'deleteBookmarks'; ids: string[]; label: string };
+  | { type: 'deleteBookmarks'; ids: string[]; label: string }
+  | { type: 'undo'; id?: string };
 
 export interface Response {
   ok: boolean;
