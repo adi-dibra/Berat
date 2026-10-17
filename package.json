@@ -9,7 +9,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "perf": "vitest run --config vitest.perf.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "harness": "vite build --config vite.dev.config.ts && vite preview --config vite.dev.config.ts",
+    "icons": "node scripts/make-icons.mjs",
+    "perf:ui": "node scripts/ui-perf.mjs",
+    "store-assets": "node scripts/store-assets.mjs",
+    "e2e": "npm run build && node scripts/e2e-real.mjs"
   },
   "dependencies": {
     "preact": "^11.0.1",

@@ -11,6 +11,11 @@
       #strip .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 4px; border-left: 4px solid transparent; }
       #strip .t.active { font-weight: 700; }
       #panel { width: 380px; flex: none; height: 100vh; }
+      body.shot { background: linear-gradient(135deg, #1a73e8, #0b3d91); align-items: center; justify-content: center; gap: 64px; }
+      body.shot #strip { flex: 0 0 520px; height: auto; overflow: visible; background: none; border: 0; color: #fff; font: 600 44px/1.15 system-ui, sans-serif; padding: 0; }
+      body.shot #strip p { font: 400 22px/1.4 system-ui, sans-serif; opacity: .9; margin-top: 18px; }
+      body.shot #panel { width: 420px; height: 720px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+      body.shot #panel > #app { height: 720px; }
     </style>
   </head>
   <body>

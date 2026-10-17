@@ -18,6 +18,7 @@ await import('../background/index');
 await import('../panel/main');
 
 const strip = document.getElementById('strip')!;
+const shot = params.get('shot');
 const colors: Record<string, string> = {
   grey: '#5f6368', blue: '#1a73e8', red: '#d93025', yellow: '#f9ab00', green: '#1e8e3e',
   pink: '#d01884', purple: '#9334e6', cyan: '#007b83', orange: '#fa903e',
@@ -26,11 +27,20 @@ const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 let pending = false;
+let frozen = false;
 const drawStrip = () => {
-  if (pending) return;
+  if (shot !== null) {
+    // Store screenshot mode: a caption instead of the debug tab strip.
+    document.body.classList.add('shot');
+    const [title, sub] = shot.split('|');
+    strip.innerHTML = `${escapeHtml(title)}${sub ? `<p>${escapeHtml(sub)}</p>` : ''}`;
+    return;
+  }
+  if (pending || frozen) return;
   pending = true;
   setTimeout(async () => {
     pending = false;
+    if (frozen) return;
     const [tabs, groups] = await Promise.all([
       fake.api.tabs.query({ currentWindow: true }),
       fake.api.tabGroups.query({ windowId: fake.currentWindowId }),
@@ -54,3 +64,13 @@ for (const ev of ['onCreated', 'onRemoved', 'onUpdated', 'onMoved', 'onActivated
 for (const ev of ['onCreated', 'onUpdated', 'onRemoved', 'onMoved'] as const)
   (fake.api.tabGroups[ev] as chrome.events.Event<() => void>).addListener(drawStrip);
 drawStrip();
+
+if (params.get('perf') === '1') {
+  const { runUiPerf } = await import('./uiPerf');
+  const results = await runUiPerf((globalThis as any).__bootStart);
+  (globalThis as any).__perfResults = results;
+  frozen = true;
+  const rows = results.map((r) => `<tr><td>${r.step}</td><td style="text-align:right">${r.step.startsWith('Rows') ? r.ms : r.ms.toFixed(0) + ' ms'}</td></tr>`).join('');
+  strip.innerHTML = `<h3>UI timings: ${params.get('tabs')} tabs, ${params.get('bookmarks')} bookmarks</h3><table>${rows}</table>`;
+  console.table(results);
+}
