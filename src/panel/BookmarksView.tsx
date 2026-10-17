@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { BookmarkItem, BookmarkStore } from '../chrome/bookmarkStore';
+import { OPEN_CONFIRM_THRESHOLD } from '../actions/convertActions';
 import { planFlatten } from '../core/flatten';
 import { groupByDomain, OTHER_KEY, type BelowMinMode } from '../core/grouping';
 import { send, type Request } from '../shared/messages';
@@ -91,6 +92,24 @@ export function BookmarksView(p: Props) {
     if (ok) run({ type: 'flattenFolder', folderId });
   };
 
+  const openAsGroup = async () => {
+    const title = store.folderTitle(folderId);
+    const count = items.length;
+    if (!count) {
+      p.notify(`"${title}" has no bookmarks to open.`);
+      return;
+    }
+    if (count > OPEN_CONFIRM_THRESHOLD) {
+      const ok = await p.confirm({
+        title: `Open ${count} tabs?`,
+        body: <p>This opens every bookmark in "{title}" and its subfolders as <b>{count}</b> new tabs in this window, in a tab group named "{title}".</p>,
+        confirmLabel: `Open ${count} tabs`,
+      });
+      if (!ok) return;
+    }
+    run({ type: 'folderToGroup', windowId: p.windowId, folderId });
+  };
+
   const open = (b: BookmarkItem) => {
     chrome.tabs.create({ url: b.url, ...(p.windowId >= 0 ? { windowId: p.windowId } : {}) });
   };
@@ -118,6 +137,10 @@ export function BookmarksView(p: Props) {
           {grouped.hiddenCount ? ` · ${grouped.hiddenCount} hidden` : ''}
         </span>
         <span class="spacer" />
+        <button class="btn" disabled={busy || !folderId || p.windowId < 0} onClick={openAsGroup}
+          title={folderId ? 'Open this folder as a Chrome tab group in this window' : 'Pick a folder first'}>
+          Open as tab group
+        </button>
         <button class="btn danger" disabled={busy || !folderId} onClick={flatten}
           title={folderId ? 'Move every bookmark in subfolders up into this folder and remove the subfolders' : 'Pick a folder first'}>
           Ungroup all (flatten)

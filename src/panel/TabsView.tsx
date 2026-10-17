@@ -197,6 +197,10 @@ export function TabsView(p: Props) {
                         onClick={(e) => { e.stopPropagation(); run({ type: 'setCollapsed', windowId, groupIds: [g.id], collapsed: !g.collapsed }); }}>
                         {g.collapsed ? 'Expand' : 'Collapse'}
                       </button>
+                      <button class="icon-btn" disabled={busy} aria-label={`Save tab group ${title} as a bookmark folder`} title="Save as bookmark folder (in Other bookmarks)"
+                        onClick={(e) => { e.stopPropagation(); run({ type: 'groupToFolder', windowId, groupId: g.id }); }}>
+                        Save
+                      </button>
                       <button class="icon-btn" disabled={busy} aria-label={`Ungroup ${title}`} title="Ungroup"
                         onClick={(e) => { e.stopPropagation(); run({ type: 'ungroup', windowId, groupIds: [g.id] }); }}>
                         Ungroup

@@ -8,7 +8,9 @@ export type Request =
   | { type: 'setCollapsed'; windowId: number; groupIds: number[] | null; collapsed: boolean }
   | { type: 'sortGroups'; windowId: number; ascending: boolean }
   | { type: 'ungroup'; windowId: number; groupIds: number[] | null }
-  | { type: 'flattenFolder'; folderId: string };
+  | { type: 'flattenFolder'; folderId: string }
+  | { type: 'groupToFolder'; windowId: number; groupId: number }
+  | { type: 'folderToGroup'; windowId: number; folderId: string };
 
 export interface Response {
   ok: boolean;
